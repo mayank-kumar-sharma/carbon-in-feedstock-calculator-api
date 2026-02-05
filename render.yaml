@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: biochar-carbon-api
+    env: docker
+    plan: free
+    autoDeploy: true
