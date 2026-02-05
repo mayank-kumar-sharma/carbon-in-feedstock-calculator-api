@@ -1,17 +1,11 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-app = FastAPI(title="Biochar Carbon Credit API")
+app = FastAPI(title="Biochar Carbon Credit API", version="1.0")
 
-# -----------------------------
-# Constants
-# -----------------------------
 CO2_CONVERSION = 3.67
 EMISSION_DEDUCTION = 0.15
 
-# -----------------------------
-# Feedstock Data
-# -----------------------------
 data = {
     "Rice husk": {"industrial": (0.65, 0.80), "artisanal": (0.55, 0.70)},
     "Wood chips": {"industrial": (0.75, 0.85), "artisanal": (0.60, 0.70)},
@@ -29,17 +23,11 @@ data = {
     "Sewage sludge": {"industrial": (0.52, 0.72), "artisanal": (0.42, 0.58)},
 }
 
-# -----------------------------
-# Request Model
-# -----------------------------
 class CalculationInput(BaseModel):
     feedstock: str
     production_type: str
     biochar_mass: float = 1
 
-# -----------------------------
-# Routes
-# -----------------------------
 @app.get("/")
 def home():
     return {"message": "Biochar Carbon Credit API running"}
@@ -48,7 +36,7 @@ def home():
 def calculate(input: CalculationInput):
 
     feedstock = input.feedstock
-    production = input.production_type.lower()
+    production = input.production_type.strip().lower()
     mass = input.biochar_mass
 
     if feedstock not in data:
@@ -56,6 +44,9 @@ def calculate(input: CalculationInput):
 
     if production not in ["industrial", "artisanal"]:
         raise HTTPException(status_code=400, detail="production_type must be industrial or artisanal")
+
+    if mass <= 0:
+        raise HTTPException(status_code=400, detail="biochar_mass must be positive")
 
     c_frac, stable_frac = data[feedstock][production]
 
